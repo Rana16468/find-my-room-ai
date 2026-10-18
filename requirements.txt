@@ -1,0 +1,10 @@
+fastapi==0.143.3
+uvicorn==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.0
+pymongo==4.19.0
+scikit-learn==1.9.1
+numpy==2.4.6
+joblib==1.6.0
+python-dotenv==1.2.4
+dnspython==2.9.0

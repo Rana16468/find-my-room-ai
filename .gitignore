@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+
+# Joblib cache files
+*.joblib
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
