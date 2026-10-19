@@ -1,3 +1,63 @@
+
+# Find My Room AI: Recommendation Microservice
+
+An AI-powered recommendation microservice for the Find My Room house listing platform. It suggests relevant rooms and listings to users.
+
+## Links
+
+- **Live Service:** https://find-my-room-ai.onrender.com
+- **GitHub Repository:** https://github.com/Rana16468/find-my-room-ai
+
+> The service runs on Render's free tier, so the first request may take a few seconds to wake up.
+
+## Prerequisites
+
+- A MongoDB database (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
+- The runtime and package manager used by the repository (see the repo's dependency file, such as `requirements.txt` or `package.json`)
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Rana16468/find-my-room-ai
+cd find-my-room-ai
+```
+
+### 2. Install dependencies
+
+Install the dependencies using the dependency file in the repository (for example `pip install -r requirements.txt` for Python or `npm install` for Node.js).
+
+### 3. Set up environment variables
+
+Create a `.env` file in the root of the project and add the following:
+
+```env
+MONGO_URI=your_mongodb_connection_string
+ADMIN_KEY=your_admin_secret_key
+CORS_ORIGINS=*
+```
+
+| Variable | Description |
+| --- | --- |
+| `MONGO_URI` | MongoDB connection string used to read listing data |
+| `ADMIN_KEY` | Secret key required for admin-only endpoints |
+| `CORS_ORIGINS` | Allowed origins for CORS. `*` allows all; in production, set it to your frontend URL (for example `https://your-frontend.com`) |
+
+> **Note:** Never commit your real `.env` file. Keep it in `.gitignore` and share only `.env.example` with placeholder values.
+
+### 4. Run the service
+
+Start the service with the run command from the repository (see its README or `package.json` / entry file).
+
+## Related Projects
+
+| Project | Link |
+| --- | --- |
+| Frontend (Next.js) | https://github.com/Rana16468/myroom |
+| Backend API (Node.js, Express & MongoDB) | https://github.com/Rana16468/house-listing-backend |
+
+
 # Find My Room: Self-Learning Room Recommendation Engine
 
 **Language / ভাষা:** [English](#english) | [বাংলা](#বাংলা)
