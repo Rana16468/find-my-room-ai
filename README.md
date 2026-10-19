@@ -1,19 +1,37 @@
 
 # Find My Room AI: Recommendation Microservice
 
-An AI-powered recommendation microservice for the Find My Room house listing platform. It suggests relevant rooms and listings to users.
+An AI-powered, self-learning room recommendation service for the Find My Room house listing platform. Built with **Python**, **FastAPI** and **MongoDB**. The whole project lives in a single file, `main.py`, so running that file starts the entire service.
 
 ## Links
 
 - **Live Service:** https://find-my-room-ai.onrender.com
 - **GitHub Repository:** https://github.com/Rana16468/find-my-room-ai
+- **API Docs (Swagger UI):** https://find-my-room-ai.onrender.com/docs
 
 > The service runs on Render's free tier, so the first request may take a few seconds to wake up.
 
+## Project Structure
+
+```
+find-my-room-ai/
+├── main.py            # The entire service (run this file)
+├── requirements.txt   # Python dependencies
+├── .env               # Environment variables (create this yourself, do not commit)
+└── .gitignore
+```
+
 ## Prerequisites
 
+- [Python 3.9 or higher](https://www.python.org/downloads/)
+- pip (comes with Python)
 - A MongoDB database (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
-- The runtime and package manager used by the repository (see the repo's dependency file, such as `requirements.txt` or `package.json`)
+
+Check your Python version:
+
+```bash
+python --version
+```
 
 ## Getting Started
 
@@ -24,13 +42,37 @@ git clone https://github.com/Rana16468/find-my-room-ai
 cd find-my-room-ai
 ```
 
-### 2. Install dependencies
+### 2. Create a virtual environment (recommended)
 
-Install the dependencies using the dependency file in the repository (for example `pip install -r requirements.txt` for Python or `npm install` for Node.js).
+**Windows**
 
-### 3. Set up environment variables
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-Create a `.env` file in the root of the project and add the following:
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If you prefer to install the packages manually:
+
+```bash
+pip install fastapi uvicorn pymongo numpy scipy scikit-learn joblib python-dotenv
+```
+
+### 4. Set up environment variables
+
+Create a `.env` file next to `main.py` and add the following:
 
 ```env
 MONGO_URI=your_mongodb_connection_string
@@ -38,17 +80,98 @@ ADMIN_KEY=your_admin_secret_key
 CORS_ORIGINS=*
 ```
 
-| Variable | Description |
+| Variable | Required | Description |
+| --- | --- | --- |
+| `MONGO_URI` | Yes | MongoDB connection string, for example `mongodb+srv://<user>:<password>@<cluster>/<database>` |
+| `ADMIN_KEY` | Yes | Secret key for the admin reindex endpoint (sent in the `X-Admin-Key` header) |
+| `CORS_ORIGINS` | No | Comma-separated list of allowed origins. Default is `*` (all). In production, use your frontend URL |
+
+> **Note:** Never commit your real `.env` file. Keep it in `.gitignore`.
+
+### 5. Run the project
+
+```bash
+python main.py
+```
+
+The server starts at **http://localhost:8000**.
+
+You can also start it directly with Uvicorn:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Open **http://localhost:8000/docs** to test the API in your browser.
+
+## API Endpoints
+
+| Method | Endpoint | Purpose | Auth |
+| --- | --- | --- | --- |
+| `GET` | `/` | Service status | None |
+| `GET` | `/health` | Database ping and index readiness | None |
+| `POST` | `/api/v1/recommendations` | Get ranked, personalized room recommendations | None |
+| `POST` | `/api/v1/feedback` | Send a user action (`click`, `save`, `contact`, `skip`) so the model can learn | None |
+| `GET` | `/api/v1/model` | Inspect learned weights and learning statistics | None |
+| `POST` | `/api/v1/admin/reindex` | Force an index rebuild | `X-Admin-Key` header |
+
+### Example: get recommendations
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/recommendations?page=1&limit=12" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "search_location": "mirpur",
+    "search_type": "family",
+    "keywords": ["balcony", "gas"],
+    "user_detected_city": "dhaka"
+  }'
+```
+
+Keep the `request_id` from the response. It is required when sending feedback.
+
+### Example: send feedback
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/feedback" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request_id": "your_request_id",
+    "room_id": "your_room_id",
+    "event": "click"
+  }'
+```
+
+### Example: force reindex (admin)
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/admin/reindex" \
+  -H "X-Admin-Key: your_admin_secret_key"
+```
+
+## How It Works (Short Version)
+
+1. **Pattern recognition:** Room descriptions are converted into vectors (TF-IDF, then SVD to 64 dimensions) and grouped into pattern clusters (K-Means).
+2. **Scoring:** Every room is scored using 11 features (text similarity, location, type, keywords, popularity, click-through rate, and more) and shown as a match score such as `87% Match`.
+3. **Learning:** User actions sent to `/api/v1/feedback` update the model instantly with online logistic regression. No manual retraining is needed.
+4. **Maintenance:** The index rebuilds automatically every 30 minutes to include new rooms.
+
+## Tech Stack
+
+- Python 3, FastAPI, Uvicorn
+- MongoDB (PyMongo)
+- NumPy, SciPy, scikit-learn
+- joblib, python-dotenv
+
+## Troubleshooting
+
+| Problem | Solution |
 | --- | --- |
-| `MONGO_URI` | MongoDB connection string used to read listing data |
-| `ADMIN_KEY` | Secret key required for admin-only endpoints |
-| `CORS_ORIGINS` | Allowed origins for CORS. `*` allows all; in production, set it to your frontend URL (for example `https://your-frontend.com`) |
-
-> **Note:** Never commit your real `.env` file. Keep it in `.gitignore` and share only `.env.example` with placeholder values.
-
-### 4. Run the service
-
-Start the service with the run command from the repository (see its README or `package.json` / entry file).
+| `ModuleNotFoundError` | Activate the virtual environment and run `pip install -r requirements.txt` again |
+| MongoDB connection error | Check `MONGO_URI`, and make sure your IP is allowed in MongoDB Atlas Network Access |
+| `401` on `/admin/reindex` | The `X-Admin-Key` header does not match `ADMIN_KEY` in `.env` |
+| CORS error from the frontend | Set `CORS_ORIGINS` to your frontend URL |
+| `python` not found | Use `python3` instead |
 
 ## Related Projects
 
@@ -56,7 +179,6 @@ Start the service with the run command from the repository (see its README or `p
 | --- | --- |
 | Frontend (Next.js) | https://github.com/Rana16468/myroom |
 | Backend API (Node.js, Express & MongoDB) | https://github.com/Rana16468/house-listing-backend |
-
 
 # Find My Room: Self-Learning Room Recommendation Engine
 
